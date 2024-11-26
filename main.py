@@ -1,15 +1,10 @@
-from fastapi import FastAPI, HTTPException
-
+import os
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-from pydantic import BaseModel
-from typing import List
-
 from api.ip import ip_router
-from validators.requests_ import IpsDataRequest
 
-# from sftp_client import connect_sftp  # Импортируйте свою функцию для подключения к SFTP
-# from main_script import process_files  # Импортируйте ваш код
+# from sftp_client import connect_sftp
+# from main_script import process_files
 
 app = FastAPI(
     title="IP-FINDER",
@@ -32,18 +27,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Define the environment variable DJANGO_SETTINGS_MODULE
+# for DATABASES settings configuration
+os.environ.setdefault('DJANGO_SETTINGS_MODULE',
+                      'config.settings')
+
 app.include_router(ip_router, prefix="/api/v1", tags=["IP-FINDER"])
-
-
-# @app.post("/process-files")
-# def process_files_endpoint(request: IpsDataRequest):
-#     """
-#     Endpoint для обработки файлов.
-#     """
-#     try:
-#         # sftp = connect_sftp()  # Функция для подключения к SFTP
-#         # process_files(sftp, request.files)  # Используйте вашу функцию для обработки файлов
-#         # sftp.close()
-#         return {"status": "success", "message": "Files processed successfully"}
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))

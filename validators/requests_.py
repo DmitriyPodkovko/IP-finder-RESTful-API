@@ -4,14 +4,14 @@ from datetime import datetime
 # from helpers.mobile_operators_ import checker
 
 
-class IpsDataRequest(BaseModel):
+class IpDataRequest(BaseModel):
     IP_DST: IPvAnyAddress
     Port_DST: int = Field(gt=0, lt=65536, description='Distinction port (0-65535)')
     Date: str = Field(description='Date in format DD.MM.YYYY')
     # Date: str = Field(pattern=r"\d{2}\.\d{2}\.\d{4}", description='Date in format DD.MM.YYYY')
     Time: str = Field(description='Time in format HH:MM:SS')
     # Time: str = Field(pattern=r"\d{2}:\d{2}:\d{2}", description='Time in format HH:MM:SS')
-    Provider: str
+    Operator: str
 
     @field_validator('Date')
     def validate_date(cls, value):

@@ -1,4 +1,4 @@
-from constants.mobile_operators import OPERATORS
+from config.mobile_operators import OPERATORS
 from helpers.replacer import only_isalpha
 
 

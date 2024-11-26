@@ -1,6 +1,6 @@
 import re
 
-from constants.regex_patterns import IPV4_PATTERN, PORT_PATTERN
+from config.regex_patterns import IPV4_PATTERN, PORT_PATTERN
 
 
 def ip_checker(ip: str) -> bool:
