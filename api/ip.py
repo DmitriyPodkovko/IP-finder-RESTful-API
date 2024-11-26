@@ -63,11 +63,11 @@ async def ips_handler(ip_list: List[IpDataRequest]):
 
                     # DST_numbers_ls.append(DST_numbers)
 
-                    if DST_numbers != 'DB_ERROR':
+                    if DST_numbers != 'ERROR':
                         status = 'Success'
                         message = 'Data processed successfully'
                     else:
-                        status = 'ERROR_DB'
+                        status = 'ERROR'
                         message = errors
 
                     if DST_numbers and next(iter(DST_numbers)) != 'ERROR':

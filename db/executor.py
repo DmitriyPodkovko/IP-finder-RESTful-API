@@ -111,7 +111,7 @@ class AsyncDBExecutor:
             print(f'DB error execute:\n {str(e)}')
             logging.error(f'DB error execute:\n {str(e)}')
             self.errors += 'execute error\n'
-            return {'DB_ERROR'}
+            return {'ERROR'}
 
     async def execute_check_numbers(self, numbers: set) -> set:
         try:
