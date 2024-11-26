@@ -1,7 +1,7 @@
 import os
 import logging
 from typing import List
-from db.executor import DBExecutor
+from db.executor import AsyncDBExecutor
 from validators.requests_ import IpDataRequest
 from fastapi import APIRouter, HTTPException
 from config.settings import (INPUT_FOLDER, RESULT_FOLDER,
@@ -31,7 +31,7 @@ ip_router = APIRouter(
 
 
 @ip_router.post("/process", name="ips-process-endpoint")
-def ips_handler(ip_list: List[IpDataRequest]):
+async def ips_handler(ip_list: List[IpDataRequest]):
     """
     Main asynchronous function for handling a request with parameters:
     IP_DST, Port_DST, Date, Time, Provider
@@ -46,12 +46,12 @@ def ips_handler(ip_list: List[IpDataRequest]):
         logging.info(f'===============================================')
         print(ip_list)
         logging.info(ip_list)
-        db_executor = DBExecutor()
-        if db_executor.connect_on():
+        db_executor = AsyncDBExecutor()
+        if await db_executor.connect_on():
             try:
                 # DST_numbers_ls = []
                 for ip_data in ip_list:
-                    DST_numbers = db_executor.execute(USERNAME, (
+                    DST_numbers = await db_executor.execute(USERNAME, (
                         ip_data.IP_DST.__str__(), ip_data.Port_DST.__str__(),
                         ip_data.Date, ip_data.Time,
                         ip_data.Operator
@@ -63,7 +63,7 @@ def ips_handler(ip_list: List[IpDataRequest]):
 
                     # DST_numbers_ls.append(DST_numbers)
 
-                    if DST_numbers != 'ERROR':
+                    if DST_numbers != 'DB_ERROR':
                         status = 'Success'
                         message = 'Data processed successfully'
                     else:
@@ -71,7 +71,7 @@ def ips_handler(ip_list: List[IpDataRequest]):
                         message = errors
 
                     if DST_numbers and next(iter(DST_numbers)) != 'ERROR':
-                        warning_numbers = db_executor.execute_check_numbers(DST_numbers)
+                        warning_numbers = await db_executor.execute_check_numbers(DST_numbers)
                         errors += db_executor.errors
                         db_executor.errors = ''
                         if warning_numbers:
@@ -95,7 +95,7 @@ def ips_handler(ip_list: List[IpDataRequest]):
                 return {"results": results}
 
             finally:
-                db_executor.connect_off()
+                await db_executor.connect_off()
                 errors += db_executor.errors
 
     except Exception as e:
