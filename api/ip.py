@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 import logging
 from typing import List
 from db.executor import AsyncDBExecutor
@@ -38,8 +39,6 @@ async def ips_handler(ip_list: List[IpDataRequest]):
     """
     try:
         create_log_file()
-        all_warning_numbers = set()
-        warning_name_files = ''
         errors = ''
         results = []
         print(f'===============================================')
@@ -49,7 +48,6 @@ async def ips_handler(ip_list: List[IpDataRequest]):
         db_executor = AsyncDBExecutor()
         if await db_executor.connect_on():
             try:
-                # DST_numbers_ls = []
                 for ip_data in ip_list:
                     DST_numbers = await db_executor.execute(USERNAME, (
                         ip_data.IP_DST.__str__(), ip_data.Port_DST.__str__(),
@@ -61,19 +59,27 @@ async def ips_handler(ip_list: List[IpDataRequest]):
                     print(f'response: {DST_numbers}')
                     logging.info(f'response: {DST_numbers}')
 
-                    # DST_numbers_ls.append(DST_numbers)
-
+                    # Check DST_numbers
                     if DST_numbers and next(iter(DST_numbers)) != 'ERROR':
                         warning_numbers = await db_executor.execute_check_numbers(DST_numbers)
                         errors += db_executor.errors
                         db_executor.errors = ''
                         if warning_numbers:
-                            all_warning_numbers |= warning_numbers
                             print(f'!!! WARNING NUMBERS: {warning_numbers} !!!')
                             logging.info(f'!!! WARNING NUMBERS: {warning_numbers} !!!')
+                            # Removing numbers from DST_numbers that were caught in warning_numbers
+                            DST_numbers = [num for num in DST_numbers if num not in warning_numbers]
+                            print(f'Clean numbers: {DST_numbers}')
+                            logging.info(f'Clean numbers: {DST_numbers}')
+                            today = datetime.now().strftime('%Y_%m_%d')
+                            warning_file = f'{RESULT_LOCAL_FOLDER}/{today}_warning_numbers.txt'
+                            with open(warning_file, 'a') as file:
+                                file.write(' '.join(map(str, warning_numbers)) + '\n')
+                                print(f'Warning numbers are saved in: {warning_file}')
+                                logging.info(f'Warning numbers are saved in: {warning_file}')
 
                     result = {
-                        "IP_DST": str(ip_data.IP_DST),
+                        "IP_DST": ip_data.IP_DST.__str__(),
                         "Port_DST": ip_data.Port_DST,
                         "Date": ip_data.Date,
                         "Time": ip_data.Time,
@@ -84,15 +90,12 @@ async def ips_handler(ip_list: List[IpDataRequest]):
                         "Message": "Data processed successfully" if DST_numbers != "ERROR"
                         else errors,
                     }
-
                     results.append(result)
-
                 return {"results": results}
 
             finally:
                 await db_executor.connect_off()
                 errors += db_executor.errors
-
     except Exception as e:
         print(f'Error processing request: {e}')
         logging.error(f'Error processing request: {e}')
