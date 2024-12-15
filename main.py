@@ -16,7 +16,7 @@ app = FastAPI(
     swagger_ui_parameters={"syntaxHighlight": True})
 
 
-origins = ["http://localhost", "http://localhost:8000"]
+origins = ["http://localhost", "http://localhost:8000", "http://0.0.0.0:8248"]
 
 
 app.add_middleware(

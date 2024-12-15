@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  api:
+    container_name: IP-finder-RESTful-API-pda
+    build: .
+#    image: ip-finder-restful-api-api:latest
+    ports:
+      - "8248:8248"
+    env_file:
+      - .env
+#    environment:
+
+    volumes:
+      - result:/IP-finder-RESTful-API/RESULT
+
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2GB
+
+  nginx:
+    container_name: IP-finder-RESTful-API-nginx-pda
+    build: ./nginx
+#    image: ip-finder-restful-api-nginx:latest
+    volumes:
+      - result:/RESULT
+    ports:
+      - "81:81"
+    depends_on:
+      - api
+
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 2GB
+
+volumes:
+  result:

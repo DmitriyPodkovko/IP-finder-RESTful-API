@@ -4,6 +4,11 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+fastapi = "==0.115.5"
+openpyxl = "*"
+django = "==3.2.20"
+cx-oracle = "==8.3.0"
+django-db-connection-pool = {extras = ["oracle"], version = "*"}
 
 [dev-packages]
 
