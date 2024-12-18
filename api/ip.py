@@ -5,10 +5,9 @@ from typing import List
 from db.executor import AsyncDBExecutor
 from validators.requests_ import IpDataRequest
 from fastapi import APIRouter, HTTPException
-from config.settings import (INPUT_FOLDER, RESULT_FOLDER,
-                             ARCHIVE_FOLDER, WARNING_FOLDER,
-                             RESULT_LOCAL_FOLDER, INTERVAL_DB_ERROR,
-                             USERNAME, ROWS_QUANTITY)
+from config.settings import (RESULT_FOLDER, WARNING_FOLDER,
+                             RESULT_LOCAL_FOLDER,
+                             USERNAME)
 
 
 def create_log_file():

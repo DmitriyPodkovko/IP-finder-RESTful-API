@@ -12,31 +12,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Build local paths like this: BASE_DIR / 'subdir'
 # BASE_DIR / 'subdir' = './subdir'
-INPUT_FOLDER = '/FILES/IN/'
 RESULT_FOLDER = '/FILES/OUT/'
 RESULT_LOCAL_FOLDER = BASE_DIR / 'RESULT'
-# ARCHIVE_FOLDER = '/FILES/ARCHIVE'
-ARCHIVE_FOLDER = BASE_DIR / 'ARCHIVE'
 # WARNING_FOLDER = '/FILES/WARNING'
 WARNING_FOLDER = BASE_DIR / 'WARNING'
-
-# Folder check interval in seconds
-INTERVAL = 60
-
-# Request execution sleep interval after DB error
-# in seconds
-INTERVAL_DB_ERROR = 1200
-
-# Excel result column name
-DESTINATION_NUMBER = 'DST number'
-
-# Quantity of rows per portion to save in xlsx output file
-ROWS_QUANTITY = 100
-
-# output filename = input filename + prefix
-# for example:
-# test_result.xlsx = test.xlsx + _result
-EXCEL_OUTPUT_FILE_PREFIX = '_result'
 
 USERNAME = ''
 
@@ -63,23 +42,6 @@ DATABASES = {
         'NAME': '',
         'USER': '',
         'PASSWORD': ''
-    }
-}
-
-# Excel columns and rows settings for extracting values
-# Column numbering starts from 0
-# Row numbering starts from 1
-# If DST column < 0 then a new column called
-# DESTINATION_NUMBER will be created
-EXCEL_ROW_COLUMN = {
-    'default': {
-        'Start_row': 2,
-        'IP_DST': 4,
-        'Port_DST': 5,
-        'Date': 6,
-        'Time': 7,
-        'Provider': 8,
-        'DST': 10,
     }
 }
 
