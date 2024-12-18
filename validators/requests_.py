@@ -5,6 +5,7 @@ from datetime import datetime
 
 
 class IpDataRequest(BaseModel):
+    Otbor: int = Field(description='Only numbers')
     IP_DST: IPvAnyAddress
     Port_DST: int = Field(gt=0, lt=65536, description='Distinction port (0-65535)')
     Date: str = Field(description='Date in format DD.MM.YYYY')

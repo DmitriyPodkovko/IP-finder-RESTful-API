@@ -35,7 +35,7 @@ ip_router = APIRouter(
 async def ips_handler(ip_list: List[IpDataRequest]):
     """
     Main asynchronous function for handling a request with parameters:
-    IP_DST, Port_DST, Date, Time, Provider
+    Otbor, IP_DST, Port_DST, Date, Time, Provider
     """
     try:
         create_log_file()
@@ -74,11 +74,13 @@ async def ips_handler(ip_list: List[IpDataRequest]):
                             today = datetime.now().strftime('%Y_%m_%d')
                             warning_file = f'{RESULT_LOCAL_FOLDER}/{today}_warning_numbers.txt'
                             with open(warning_file, 'a') as file:
-                                file.write(' '.join(map(str, warning_numbers)) + '\n')
+                                file.write(f'Otbor: {ip_data.Otbor}, ' +
+                                           ' '.join(map(str, warning_numbers)) + '\n')
                                 print(f'Warning numbers are saved in: {warning_file}')
                                 logging.info(f'Warning numbers are saved in: {warning_file}')
 
                     result = {
+                        "Otbor": ip_data.Otbor,
                         "IP_DST": ip_data.IP_DST.__str__(),
                         "Port_DST": ip_data.Port_DST,
                         "Date": ip_data.Date,
