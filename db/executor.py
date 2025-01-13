@@ -48,8 +48,13 @@ class AsyncDBExecutor:
         try:
             if self._cursor:
                 await sync_to_async(self._cursor.close)()
-                print(f'CONNECT OFF')
-                logging.info(f'CONNECT OFF')
+            sync_to_async(connections.__getitem__)('filter').close()
+            print(f'CONNECT OFF')
+            logging.info(f'CONNECT OFF')
+            # if connections['filter']:
+            #     await sync_to_async(connections['filter'].close)()
+            #     print(f'CONNECT OFF')
+            #     logging.info(f'CONNECT OFF')
         except Exception as e:
             print(f'DB error connect off:\n {str(e)}')
             logging.error(f'DB error connect off:\n {str(e)}')
