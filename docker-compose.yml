@@ -3,6 +3,7 @@ version: "3.8"
 services:
   api:
     container_name: IP-finder-RESTful-API-pda
+    privileged: true
     build: .
 #    image: ip-finder-restful-api-api:latest
     ports:

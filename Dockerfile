@@ -18,9 +18,14 @@ ENV PYTHONUNBUFFERED 1
 COPY . .
 
 RUN apk add --update --upgrade --no-cache --virtual .tmp-build-deps \
-    gcc musl-dev libaio gcompat && \
+    gcc musl-dev libaio gcompat cifs-utils && \
+    # If need libcap for setcap
     pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
+    # If necessary, install the required capabilities for mount.cifs \
+    # setcap cap_sys_admin+ep /usr/sbin/mount.cifs
+    # Clean up build dependencies
+    # apk del .tmp-build-deps
 
 # Copying the Oracle client from the first image
 COPY --from=oracle-client /usr/lib/oracle /usr/lib/oracle

@@ -1,10 +1,5 @@
 from pathlib import Path
-
-# SFTP connection settings
-SFTP_HOST = ''
-SFTP_PORT = 22  # SFTP default port
-SFTP_USERNAME = ''
-SFTP_PASSWORD = ''
+import platform
 
 # Build paths inside the project like this:
 # BASE_DIR / 'subdir'
@@ -12,10 +7,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Build local paths like this: BASE_DIR / 'subdir'
 # BASE_DIR / 'subdir' = './subdir'
-RESULT_FOLDER = '/FILES/OUT/'
 RESULT_LOCAL_FOLDER = BASE_DIR / 'RESULT'
-# WARNING_FOLDER = '/FILES/WARNING'
-WARNING_FOLDER = BASE_DIR / 'WARNING'
+# WARNING_FOLDER = BASE_DIR / 'WARNING'
+
+# Connection settings for SHARE
+SHARE = 'SHARE/IP-FINDER/WARNING_NUMBERS'
+SHARE_HOST = ''
+SHARE_USERNAME = ''
+SHARE_PASSWORD = ''
+
+# Network folder and mount point based on OS
+if platform.system() == "Linux":  # Linux
+    WARNING_FOLDER = f'//{SHARE_HOST}/{SHARE}'
+    MOUNT_POINT = Path('/mnt/warning_folder')
+elif platform.system() == "Darwin":  # macOS
+    WARNING_FOLDER = f'smb://{SHARE_USERNAME}:{SHARE_PASSWORD}@{SHARE_HOST}/{SHARE}'
+    MOUNT_POINT = Path('~/mnt/warning_folder').expanduser()
+else:
+    raise OSError("Unsupported operating system. Only macOS and Linux are supported.")
 
 USERNAME = ''
 
@@ -68,7 +77,8 @@ OPERATORS = {
 
 MOB3_IPS = ()
 MTS_IPS = ('46.133', '89.209', '31.144', '128.124', '178.133')
-KS_IPS = ('46.211', '94.153.112')
+# KS_IPS = ('46.211', '94.153.112')
+KS_IPS = ('46.211', '94.153', '5.248')
 LIFE_IPS = ('37.73', '46.96', '88.154', '88.155')
 
 # MOB3_INNER_IPS = (10, 37, 192)

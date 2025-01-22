@@ -1,13 +1,17 @@
 import os
+import platform
+import subprocess
 from datetime import datetime
+import uuid
 import logging
+import shutil
 from typing import List
 from db.executor import AsyncDBExecutor
 from validators.requests_ import IpDataRequest
 from fastapi import APIRouter, HTTPException
-from config.settings import (RESULT_FOLDER, WARNING_FOLDER,
-                             RESULT_LOCAL_FOLDER,
-                             USERNAME)
+from config.settings import (SHARE_USERNAME, SHARE_PASSWORD,
+                             MOUNT_POINT, WARNING_FOLDER,
+                             RESULT_LOCAL_FOLDER, USERNAME)
 
 
 def create_log_file():
@@ -23,6 +27,77 @@ def create_log_file():
                         level=logging.INFO,
                         format='%(asctime)s - %(levelname)s - %(message)s',
                         force=True)
+
+
+def mount_network_folder():
+    """
+    Mounts a network folder if it is not already mounted.
+    """
+    try:
+        # Create a mount point if it doesn't exist
+        if not os.path.exists(MOUNT_POINT):
+            os.makedirs(MOUNT_POINT, exist_ok=True)
+            print(f"Created mount point directory: {MOUNT_POINT}")
+            logging.info(f"Created mount point directory: {MOUNT_POINT}")
+        # Check if the folder is already mounted
+        if not os.path.ismount(MOUNT_POINT):
+            print(f"Mounting network folder: {WARNING_FOLDER} to {MOUNT_POINT}")
+            logging.info(f"Mounting network folder: {WARNING_FOLDER} to {MOUNT_POINT}")
+
+            current_os = platform.system()
+            if current_os == "Linux":  # For Linux
+                try:
+                    subprocess.run([
+                        'mount', '-t', 'cifs', WARNING_FOLDER, str(MOUNT_POINT),
+                        '-o', f'username={SHARE_USERNAME},password={SHARE_PASSWORD},rw'
+                    ], check=True)
+                except subprocess.CalledProcessError as e:
+                    print(f"Failed to mount on Linux: {e}")
+                    logging.error(f"Failed to mount on Linux: {e}")
+                    raise
+            elif current_os == "Darwin":  # For macOS
+                try:
+                    subprocess.run([
+                        'mount_smbfs', WARNING_FOLDER, str(MOUNT_POINT)
+                    ], check=True)
+                except subprocess.CalledProcessError as e:
+                    print(f"Failed to mount on macOS: {e}")
+                    logging.error(f"Failed to mount on macOS: {e}")
+                    raise
+            else:
+                raise OSError(f"Unsupported OS: {current_os}")
+
+            print(f"Mounted network folder: {WARNING_FOLDER} to {MOUNT_POINT}")
+            logging.info(f"Mounted network folder: {WARNING_FOLDER} to {MOUNT_POINT}")
+        else:
+            print(f"Network folder already mounted: {MOUNT_POINT}")
+            logging.info(f"Network folder already mounted: {MOUNT_POINT}")
+    except Exception as e:
+        print(f"Error: {e}")
+        logging.error(f"Error mounting network folder: {e}")
+        raise
+
+
+def move_file_with_unique_name(src_file, dest_folder):
+    """
+    Moves a file to the destination folder with a unique name
+    if a file with the same name exists.
+    """
+    # Get file name from source path
+    base_name = os.path.basename(src_file)
+    # Destination path
+    dest_path = os.path.join(dest_folder, base_name)
+    # If the file already exists, create a unique name
+    if os.path.exists(dest_path):
+        base_name_without_ext, ext = os.path.splitext(base_name)
+        # Generate a 5-character unique identifier
+        unique_id = uuid.uuid4().hex[:5]
+        unique_name = f'{base_name_without_ext}_{unique_id}{ext}'
+        dest_path = os.path.join(dest_folder, unique_name)
+    shutil.move(src_file, dest_path)
+    print(f'Moved file: {src_file} to {dest_path}')
+    logging.info(f'Moved file: {src_file} to {dest_path}')
+    return dest_path
 
 
 ip_router = APIRouter(
@@ -71,12 +146,15 @@ async def ips_handler(ip_list: List[IpDataRequest]):
                             print(f'Clean numbers: {DST_numbers}')
                             logging.info(f'Clean numbers: {DST_numbers}')
                             today = datetime.now().strftime('%Y_%m_%d')
-                            warning_file = f'{RESULT_LOCAL_FOLDER}/{today}_warning_numbers.txt'
+                            warning_file_name = f'{today}_warning_numbers.txt'
+                            warning_file = os.path.join(RESULT_LOCAL_FOLDER, warning_file_name)
                             with open(warning_file, 'a') as file:
                                 file.write(f'Otbor: {ip_data.Otbor}, ' +
                                            ' '.join(map(str, warning_numbers)) + '\n')
                                 print(f'Warning numbers are saved in: {warning_file}')
                                 logging.info(f'Warning numbers are saved in: {warning_file}')
+                            mount_network_folder()
+                            move_file_with_unique_name(warning_file, MOUNT_POINT)
 
                     result = {
                         "Otbor": ip_data.Otbor,
