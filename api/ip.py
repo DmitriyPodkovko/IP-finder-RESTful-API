@@ -10,7 +10,9 @@ from db.executor import AsyncDBExecutor
 from validators.requests_ import IpDataRequest
 from fastapi import APIRouter, HTTPException
 from config.settings import (SHARE_USERNAME, SHARE_PASSWORD,
-                             MOUNT_POINT, WARNING_FOLDER,
+                             MOUNT_POINT_LOG, LOG_FOLDER,
+                             MOUNT_POINT_REQUEST, REQUEST_FOLDER,
+                             MOUNT_POINT_WARNING, WARNING_FOLDER,
                              RESULT_LOCAL_FOLDER, USERNAME)
 
 
@@ -29,26 +31,26 @@ def create_log_file():
                         force=True)
 
 
-def mount_network_folder():
+def mount_network_folder(mount_point, folder):
     """
     Mounts a network folder if it is not already mounted.
     """
     try:
         # Create a mount point if it doesn't exist
-        if not os.path.exists(MOUNT_POINT):
-            os.makedirs(MOUNT_POINT, exist_ok=True)
-            print(f"Created mount point directory: {MOUNT_POINT}")
-            logging.info(f"Created mount point directory: {MOUNT_POINT}")
+        if not os.path.exists(mount_point):
+            os.makedirs(mount_point, exist_ok=True)
+            print(f"Created mount point directory: {mount_point}")
+            logging.info(f"Created mount point directory: {mount_point}")
         # Check if the folder is already mounted
-        if not os.path.ismount(MOUNT_POINT):
-            print(f"Mounting network folder: {WARNING_FOLDER} to {MOUNT_POINT}")
-            logging.info(f"Mounting network folder: {WARNING_FOLDER} to {MOUNT_POINT}")
+        if not os.path.ismount(mount_point):
+            print(f"Mounting network folder: {folder} to {mount_point}")
+            logging.info(f"Mounting network folder: {folder} to {mount_point}")
 
             current_os = platform.system()
             if current_os == "Linux":  # For Linux
                 try:
                     subprocess.run([
-                        'mount', '-t', 'cifs', WARNING_FOLDER, str(MOUNT_POINT),
+                        'mount', '-t', 'cifs', folder, str(mount_point),
                         '-o', f'username={SHARE_USERNAME},password={SHARE_PASSWORD},rw'
                     ], check=True)
                 except subprocess.CalledProcessError as e:
@@ -58,7 +60,7 @@ def mount_network_folder():
             elif current_os == "Darwin":  # For macOS
                 try:
                     subprocess.run([
-                        'mount_smbfs', WARNING_FOLDER, str(MOUNT_POINT)
+                        'mount_smbfs', folder, str(mount_point)
                     ], check=True)
                 except subprocess.CalledProcessError as e:
                     print(f"Failed to mount on macOS: {e}")
@@ -67,13 +69,13 @@ def mount_network_folder():
             else:
                 raise OSError(f"Unsupported OS: {current_os}")
 
-            print(f"Mounted network folder: {WARNING_FOLDER} to {MOUNT_POINT}")
-            logging.info(f"Mounted network folder: {WARNING_FOLDER} to {MOUNT_POINT}")
+            print(f"Mounted network folder: {folder} to {mount_point}")
+            logging.info(f"Mounted network folder: {folder} to {mount_point}")
         else:
-            print(f"Network folder already mounted: {MOUNT_POINT}")
-            logging.info(f"Network folder already mounted: {MOUNT_POINT}")
+            print(f"Network folder already mounted: {mount_point}")
+            logging.info(f"Network folder already mounted: {mount_point}")
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error mounting network folder: {e}")
         logging.error(f"Error mounting network folder: {e}")
         raise
 
@@ -83,21 +85,26 @@ def move_file_with_unique_name(src_file, dest_folder):
     Moves a file to the destination folder with a unique name
     if a file with the same name exists.
     """
-    # Get file name from source path
-    base_name = os.path.basename(src_file)
-    # Destination path
-    dest_path = os.path.join(dest_folder, base_name)
-    # If the file already exists, create a unique name
-    if os.path.exists(dest_path):
-        base_name_without_ext, ext = os.path.splitext(base_name)
-        # Generate a 5-character unique identifier
-        unique_id = uuid.uuid4().hex[:5]
-        unique_name = f'{base_name_without_ext}_{unique_id}{ext}'
-        dest_path = os.path.join(dest_folder, unique_name)
-    shutil.move(src_file, dest_path)
-    print(f'Moved file: {src_file} to {dest_path}')
-    logging.info(f'Moved file: {src_file} to {dest_path}')
-    return dest_path
+    try:
+        # Get file name from source path
+        base_name = os.path.basename(src_file)
+        # Destination path
+        dest_path = os.path.join(dest_folder, base_name)
+        # If the file already exists, create a unique name
+        if os.path.exists(dest_path):
+            base_name_without_ext, ext = os.path.splitext(base_name)
+            # Generate a 5-character unique identifier
+            unique_id = uuid.uuid4().hex[:5]
+            unique_name = f'{base_name_without_ext}_{unique_id}{ext}'
+            dest_path = os.path.join(dest_folder, unique_name)
+        shutil.move(src_file, dest_path)
+        print(f'Moved file: {src_file} to {dest_path}')
+        logging.info(f'Moved file: {src_file} to {dest_path}')
+        return dest_path
+    except Exception as e:
+        print(f"Error moving file: {e}")
+        logging.error(f"Error moving file: {e}")
+        raise
 
 
 ip_router = APIRouter(
@@ -149,12 +156,17 @@ async def ips_handler(ip_list: List[IpDataRequest]):
                             warning_file_name = f'{today}_warning_numbers.txt'
                             warning_file = os.path.join(RESULT_LOCAL_FOLDER, warning_file_name)
                             with open(warning_file, 'a') as file:
-                                file.write(f'Otbor: {ip_data.Otbor}, ' +
+                                file.write(f'Otbor: {ip_data.Otbor}, '
+                                           f'IP DST: {ip_data.IP_DST}, '
+                                           f'Port DST: {ip_data.Port_DST}, '
+                                           f'Date: {ip_data.Date}, '
+                                           f'Time: {ip_data.Time}, '
+                                           f'Provider: {ip_data.Operator}, ' +
                                            ' '.join(map(str, warning_numbers)) + '\n')
                                 print(f'Warning numbers are saved in: {warning_file}')
                                 logging.info(f'Warning numbers are saved in: {warning_file}')
-                            mount_network_folder()
-                            move_file_with_unique_name(warning_file, MOUNT_POINT)
+                            mount_network_folder(MOUNT_POINT_WARNING, WARNING_FOLDER)
+                            move_file_with_unique_name(warning_file, MOUNT_POINT_WARNING)
 
                     result = {
                         "Otbor": ip_data.Otbor,
@@ -179,3 +191,6 @@ async def ips_handler(ip_list: List[IpDataRequest]):
         print(f'Error processing request: {e}')
         logging.error(f'Error processing request: {e}')
         raise HTTPException(status_code=500, detail='Internal Server Error')
+    finally:
+        mount_network_folder(MOUNT_POINT_LOG, LOG_FOLDER)
+        move_file_with_unique_name(f'{RESULT_LOCAL_FOLDER}/{USERNAME}.log', MOUNT_POINT_LOG)

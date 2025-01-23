@@ -12,17 +12,28 @@ RESULT_LOCAL_FOLDER = BASE_DIR / 'RESULT'
 
 # Connection settings for SHARE
 SHARE = 'SHARE/IP-FINDER/WARNING_NUMBERS'
+SHARE_LOG = ''
+SHARE_REQUEST = ''
+SHARE_WARNING = ''
 SHARE_HOST = ''
 SHARE_USERNAME = ''
 SHARE_PASSWORD = ''
 
 # Network folder and mount point based on OS
 if platform.system() == "Linux":  # Linux
-    WARNING_FOLDER = f'//{SHARE_HOST}/{SHARE}'
-    MOUNT_POINT = Path('/mnt/warning_folder')
+    LOG_FOLDER = f'//{SHARE_HOST}/{SHARE}/{SHARE_LOG}'
+    MOUNT_POINT_LOG = Path('/mnt/log_folder')
+    REQUEST_FOLDER = f'//{SHARE_HOST}/{SHARE}/{SHARE_REQUEST}'
+    MOUNT_POINT_REQUEST = Path('/mnt/request_folder')
+    WARNING_FOLDER = f'//{SHARE_HOST}/{SHARE}/{SHARE_WARNING}'
+    MOUNT_POINT_WARNING = Path('/mnt/warning_folder')
 elif platform.system() == "Darwin":  # macOS
-    WARNING_FOLDER = f'smb://{SHARE_USERNAME}:{SHARE_PASSWORD}@{SHARE_HOST}/{SHARE}'
-    MOUNT_POINT = Path('~/mnt/warning_folder').expanduser()
+    LOG_FOLDER = f'smb://{SHARE_USERNAME}:{SHARE_PASSWORD}@{SHARE_HOST}/{SHARE}/{SHARE_LOG}'
+    MOUNT_POINT_LOG = Path('~/mnt/log_folder').expanduser()
+    REQUEST_FOLDER = f'smb://{SHARE_USERNAME}:{SHARE_PASSWORD}@{SHARE_HOST}/{SHARE}/{SHARE_REQUEST}'
+    MOUNT_POINT_REQUEST = Path('~/mnt/request_folder').expanduser()
+    WARNING_FOLDER = f'smb://{SHARE_USERNAME}:{SHARE_PASSWORD}@{SHARE_HOST}/{SHARE}/{SHARE_WARNING}'
+    MOUNT_POINT_WARNING = Path('~/mnt/warning_folder').expanduser()
 else:
     raise OSError("Unsupported operating system. Only macOS and Linux are supported.")
 
