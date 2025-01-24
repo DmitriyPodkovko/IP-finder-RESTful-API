@@ -129,61 +129,73 @@ async def ips_handler(ip_list: List[IpDataRequest]):
         db_executor = AsyncDBExecutor()
         if await db_executor.connect_on():
             try:
-                for ip_data in ip_list:
-                    DST_numbers = await db_executor.execute(USERNAME, (
-                        ip_data.IP_DST.__str__(), ip_data.Port_DST.__str__(),
-                        ip_data.Date, ip_data.Time,
-                        ip_data.Operator
-                    ))
-                    errors += db_executor.errors
-                    db_executor.errors = ''
-                    print(f'response: {DST_numbers}')
-                    logging.info(f'response: {DST_numbers}')
-
-                    # Check DST_numbers
-                    if DST_numbers and next(iter(DST_numbers)) != 'ERROR':
-                        warning_numbers = await db_executor.execute_check_numbers(DST_numbers)
+                today = datetime.now().strftime('%Y_%m_%d')
+                request_file_name = f'{today}_request.txt'
+                request_file = os.path.join(RESULT_LOCAL_FOLDER, request_file_name)
+                with open(request_file, 'a') as r_file:
+                    for ip_data in ip_list:
+                        r_file.write(f'Otbor: {ip_data.Otbor}, '
+                                     f'IP DST: {ip_data.IP_DST}, '
+                                     f'Port DST: {ip_data.Port_DST}, '
+                                     f'Date: {ip_data.Date}, '
+                                     f'Time: {ip_data.Time}, '
+                                     f'Provider: {ip_data.Operator}\n')
+                        DST_numbers = await db_executor.execute(USERNAME, (
+                            ip_data.IP_DST.__str__(), ip_data.Port_DST.__str__(),
+                            ip_data.Date, ip_data.Time,
+                            ip_data.Operator
+                        ))
                         errors += db_executor.errors
                         db_executor.errors = ''
-                        if warning_numbers:
-                            print(f'!!! WARNING NUMBERS: {warning_numbers} !!!')
-                            logging.info(f'!!! WARNING NUMBERS: {warning_numbers} !!!')
-                            # Removing numbers from DST_numbers that were caught in warning_numbers
-                            DST_numbers = [num for num in DST_numbers if num not in warning_numbers]
-                            print(f'Clean numbers: {DST_numbers}')
-                            logging.info(f'Clean numbers: {DST_numbers}')
-                            today = datetime.now().strftime('%Y_%m_%d')
-                            warning_file_name = f'{today}_warning_numbers.txt'
-                            warning_file = os.path.join(RESULT_LOCAL_FOLDER, warning_file_name)
-                            with open(warning_file, 'a') as file:
-                                file.write(f'Otbor: {ip_data.Otbor}, '
-                                           f'IP DST: {ip_data.IP_DST}, '
-                                           f'Port DST: {ip_data.Port_DST}, '
-                                           f'Date: {ip_data.Date}, '
-                                           f'Time: {ip_data.Time}, '
-                                           f'Provider: {ip_data.Operator}, ' +
-                                           ' '.join(map(str, warning_numbers)) + '\n')
-                                print(f'Warning numbers are saved in: {warning_file}')
-                                logging.info(f'Warning numbers are saved in: {warning_file}')
-                            mount_network_folder(MOUNT_POINT_WARNING, WARNING_FOLDER)
-                            move_file_with_unique_name(warning_file, MOUNT_POINT_WARNING)
+                        print(f'response: {DST_numbers}')
+                        logging.info(f'response: {DST_numbers}')
 
-                    result = {
-                        "Otbor": ip_data.Otbor,
-                        "IP_DST": ip_data.IP_DST.__str__(),
-                        "Port_DST": ip_data.Port_DST,
-                        "Date": ip_data.Date,
-                        "Time": ip_data.Time,
-                        "Operator": ip_data.Operator,
-                        "PhoneNumbers": DST_numbers,
-                        "Status": "Success" if DST_numbers != "ERROR"
-                        else "ERROR",
-                        "Message": "Data processed successfully" if DST_numbers != "ERROR"
-                        else errors,
-                    }
-                    results.append(result)
+                        # Check DST_numbers
+                        if DST_numbers and next(iter(DST_numbers)) != 'ERROR':
+                            warning_numbers = await db_executor.execute_check_numbers(DST_numbers)
+                            errors += db_executor.errors
+                            db_executor.errors = ''
+                            if warning_numbers:
+                                print(f'!!! WARNING NUMBERS: {warning_numbers} !!!')
+                                logging.info(f'!!! WARNING NUMBERS: {warning_numbers} !!!')
+                                # Removing numbers from DST_numbers that were caught in warning_numbers
+                                DST_numbers = [num for num in DST_numbers if num not in warning_numbers]
+                                print(f'Clean numbers: {DST_numbers}')
+                                logging.info(f'Clean numbers: {DST_numbers}')
+                                warning_file_name = f'{today}_warning_numbers.txt'
+                                warning_file = os.path.join(RESULT_LOCAL_FOLDER, warning_file_name)
+                                with open(warning_file, 'a') as w_file:
+                                    w_file.write(f'Otbor: {ip_data.Otbor}, '
+                                                 f'IP DST: {ip_data.IP_DST}, '
+                                                 f'Port DST: {ip_data.Port_DST}, '
+                                                 f'Date: {ip_data.Date}, '
+                                                 f'Time: {ip_data.Time}, '
+                                                 f'Provider: {ip_data.Operator}, ' +
+                                                 ' '.join(map(str, warning_numbers)) + '\n')
+                                    print(f'Warning numbers are saved in: {warning_file}')
+                                    logging.info(f'Warning numbers are saved in: {warning_file}')
+                                mount_network_folder(MOUNT_POINT_WARNING, WARNING_FOLDER)
+                                move_file_with_unique_name(warning_file, MOUNT_POINT_WARNING)
+
+                        result = {
+                            "Otbor": ip_data.Otbor,
+                            "IP_DST": ip_data.IP_DST.__str__(),
+                            "Port_DST": ip_data.Port_DST,
+                            "Date": ip_data.Date,
+                            "Time": ip_data.Time,
+                            "Operator": ip_data.Operator,
+                            "PhoneNumbers": DST_numbers,
+                            "Status": "Success" if DST_numbers != "ERROR"
+                            else "ERROR",
+                            "Message": "Data processed successfully" if DST_numbers != "ERROR"
+                            else errors,
+                        }
+                        results.append(result)
+                    print(f'Request are saved in: {request_file}')
+                    logging.info(f'Request are saved in: {request_file}')
+                mount_network_folder(MOUNT_POINT_REQUEST, REQUEST_FOLDER)
+                move_file_with_unique_name(request_file, MOUNT_POINT_REQUEST)
                 return {"results": results}
-
             finally:
                 await db_executor.connect_off()
                 errors += db_executor.errors
