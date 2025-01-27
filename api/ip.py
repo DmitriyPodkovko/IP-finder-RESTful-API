@@ -145,6 +145,7 @@ async def ips_handler(ip_list: List[IpDataRequest]):
                             ip_data.Date, ip_data.Time,
                             ip_data.Operator
                         ))
+                        r_file.write(f'Response: {DST_numbers}\n')
                         errors += db_executor.errors
                         db_executor.errors = ''
                         print(f'response: {DST_numbers}')
