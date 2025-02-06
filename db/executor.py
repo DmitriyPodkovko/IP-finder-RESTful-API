@@ -49,6 +49,7 @@ class AsyncDBExecutor:
             if self._cursor:
                 await sync_to_async(self._cursor.close)()
             sync_to_async(connections.__getitem__)('filter').close()
+            await sync_to_async(connections.close_all)()
             print(f'CONNECT OFF')
             logging.info(f'CONNECT OFF')
             # if connections['filter']:
