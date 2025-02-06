@@ -134,18 +134,19 @@ async def ips_handler(ip_list: List[IpDataRequest]):
                 request_file = os.path.join(RESULT_LOCAL_FOLDER, request_file_name)
                 with open(request_file, 'a') as r_file:
                     for ip_data in ip_list:
-                        r_file.write(f'Otbor: {ip_data.Otbor}, '
-                                     f'IP DST: {ip_data.IP_DST}, '
-                                     f'Port DST: {ip_data.Port_DST}, '
-                                     f'Date: {ip_data.Date}, '
-                                     f'Time: {ip_data.Time}, '
-                                     f'Provider: {ip_data.Operator}\n')
+                        r_file.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}, "
+                                     f"Otbor: {ip_data.Otbor}, "
+                                     f"IP DST: {ip_data.IP_DST}, "
+                                     f"Port DST: {ip_data.Port_DST}, "
+                                     f"Date: {ip_data.Date}, "
+                                     f"Time: {ip_data.Time}, "
+                                     f"Provider: {ip_data.Operator}")
                         DST_numbers = await db_executor.execute(USERNAME, (
                             ip_data.IP_DST.__str__(), ip_data.Port_DST.__str__(),
                             ip_data.Date, ip_data.Time,
                             ip_data.Operator
                         ))
-                        r_file.write(f'Response: {DST_numbers}\n')
+                        r_file.write(f', Response: {DST_numbers}\n')
                         errors += db_executor.errors
                         db_executor.errors = ''
                         print(f'response: {DST_numbers}')
@@ -166,13 +167,14 @@ async def ips_handler(ip_list: List[IpDataRequest]):
                                 warning_file_name = f'{today}_warning_numbers.txt'
                                 warning_file = os.path.join(RESULT_LOCAL_FOLDER, warning_file_name)
                                 with open(warning_file, 'a') as w_file:
-                                    w_file.write(f'Otbor: {ip_data.Otbor}, '
-                                                 f'IP DST: {ip_data.IP_DST}, '
-                                                 f'Port DST: {ip_data.Port_DST}, '
-                                                 f'Date: {ip_data.Date}, '
-                                                 f'Time: {ip_data.Time}, '
-                                                 f'Provider: {ip_data.Operator}, ' +
-                                                 ' '.join(map(str, warning_numbers)) + '\n')
+                                    w_file.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}, "
+                                                 f"Otbor: {ip_data.Otbor}, "
+                                                 f"IP DST: {ip_data.IP_DST}, "
+                                                 f"Port DST: {ip_data.Port_DST}, "
+                                                 f"Date: {ip_data.Date}, "
+                                                 f"Time: {ip_data.Time}, "
+                                                 f"Provider: {ip_data.Operator} " +
+                                                 " ".join(map(str, warning_numbers)) + "\n")
                                     print(f'Warning numbers are saved in: {warning_file}')
                                     logging.info(f'Warning numbers are saved in: {warning_file}')
                                 mount_network_folder(MOUNT_POINT_WARNING, WARNING_FOLDER)
