@@ -2,8 +2,6 @@ import logging
 import cx_Oracle
 import sys
 import os
-import asyncio
-from asgiref.sync import sync_to_async
 from django.db import connections
 from datetime import datetime
 from config.settings import (ORACLE_FUNCTIONS,
@@ -24,17 +22,15 @@ except Exception as e:
     sys.exit(1)
 
 
-class AsyncDBExecutor:
+class DBExecutor:
     def __init__(self) -> None:
         self._cursor = None
         self._ip_tuple = None
         self.errors = ''
 
-    async def connect_on(self) -> bool:
+    def connect_on(self) -> bool:
         try:
-            # self._cursor = connections['filter'].cursor()
-            connection = await sync_to_async(connections.__getitem__)('filter')
-            self._cursor = await sync_to_async(connection.cursor)()
+            self._cursor = connections['filter'].cursor()
             print(f'CONNECT ON')
             logging.info(f'CONNECT ON')
             return True
@@ -44,24 +40,20 @@ class AsyncDBExecutor:
             self.errors += 'connect on error\n'
             return False
 
-    async def connect_off(self) -> None:
+    def connect_off(self) -> None:
         try:
             if self._cursor:
-                await sync_to_async(self._cursor.close)()
-            sync_to_async(connections.__getitem__)('filter').close()
-            await sync_to_async(connections.close_all)()
+                self._cursor.close()
+            connections['filter'].close()
+            connections.close_all()
             print(f'CONNECT OFF')
             logging.info(f'CONNECT OFF')
-            # if connections['filter']:
-            #     await sync_to_async(connections['filter'].close)()
-            #     print(f'CONNECT OFF')
-            #     logging.info(f'CONNECT OFF')
         except Exception as e:
             print(f'DB error connect off:\n {str(e)}')
             logging.error(f'DB error connect off:\n {str(e)}')
             self.errors += 'connect off error\n'
 
-    async def execute(self, username, ip_tuple: tuple) -> set:
+    def execute(self, username, ip_tuple: tuple) -> set:
         try:
             result = set()
             self._ip_tuple = ip_tuple
@@ -87,29 +79,20 @@ class AsyncDBExecutor:
                 oracle_func = ORACLE_FUNCTIONS.get('tel_func')
                 print(f'{oracle_func}, {username}, {ip}, {port}, {operator}, {dt}')
                 logging.info(f'{oracle_func}, {username}, {ip}, {port}, {operator}, {dt}')
-                # ref_cursor = self._cursor.callfunc(oracle_func, cx_Oracle.CURSOR,
-                #                                    [username, ip, port, operator, dt])
-                ref_cursor = await asyncio.to_thread(
-                    self._cursor.callfunc, oracle_func, cx_Oracle.CURSOR,
-                    [username, ip, port, operator, dt]
-                )
+                ref_cursor = self._cursor.callfunc(oracle_func, cx_Oracle.CURSOR,
+                                                   [username, ip, port, operator, dt])
                 print(f'request done')
                 logging.info(f'request done')
             else:
                 oracle_func = ORACLE_FUNCTIONS.get('inner_tel_func')
                 print(f'{oracle_func}, {username}, {ip}, {operator}, {dt}')
                 logging.info(f'{oracle_func}, {username}, {ip}, {operator}, {dt}')
-                # ref_cursor = self._cursor.callfunc(oracle_func, cx_Oracle.CURSOR,
-                #                                    [username, ip, operator, dt])
-                ref_cursor = await asyncio.to_thread(
-                    self._cursor.callfunc, oracle_func, cx_Oracle.CURSOR,
-                    [username, ip, operator, dt]
-                )
+                ref_cursor = self._cursor.callfunc(oracle_func, cx_Oracle.CURSOR,
+                                                   [username, ip, operator, dt])
                 print(f'request done')
                 logging.info(f'request done')
             if ref_cursor:
-                # for row in ref_cursor.fetchall():
-                for row in await asyncio.to_thread(ref_cursor.fetchall):
+                for row in ref_cursor.fetchall():
                     for i in row:
                         result.add(i)
             return result
@@ -119,18 +102,15 @@ class AsyncDBExecutor:
             self.errors += 'execute error\n'
             return {'ERROR'}
 
-    async def execute_check_numbers(self, numbers: set) -> set:
+    def execute_check_numbers(self, numbers: set) -> set:
         try:
             result = set()
             for number in numbers:
                 oracle_func = ORACLE_FUNCTIONS.get('check_tel_func')
                 print(f'{oracle_func}, {number}')
                 logging.info(f'{oracle_func}, {number}')
-                # response = self._cursor.callfunc(oracle_func, int,
-                #                                  [number])
-                response = await asyncio.to_thread(
-                    self._cursor.callfunc, oracle_func, int, [number]
-                )
+                response = self._cursor.callfunc(oracle_func, int,
+                                                 [number])
                 print(f'request done')
                 logging.info(f'request done')
                 if bool(response):
