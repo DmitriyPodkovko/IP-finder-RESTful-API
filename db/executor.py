@@ -17,8 +17,16 @@ try:
     elif sys.platform.startswith("win32"):
         lib_dir = r"C:\oracle\instantclient_19_24"
         cx_Oracle.init_oracle_client(lib_dir=lib_dir)
+    elif sys.platform.startswith("linux"):
+        lib_dir = "/home/pda/Downloads/instantclient_19_28"
+        if os.path.isdir(lib_dir):
+            cx_Oracle.init_oracle_client(lib_dir=lib_dir)
+        else:
+            print(f"Oracle Instant Client not found at {lib_dir}")
+            sys.exit(1)
+
 except Exception as e:
-    print(e)
+    print(f"Oracle Client initialization error: {e}")
     sys.exit(1)
 
 
