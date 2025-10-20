@@ -10,6 +10,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 RESULT_LOCAL_FOLDER = BASE_DIR / 'RESULT'
 # WARNING_FOLDER = BASE_DIR / 'WARNING'
 
+# Request execution sleep interval
+# in seconds
+INTERVAL_REQUEST = 20
+
 # Connection settings for SHARE
 SHARE = 'UPR_6/IP-FINDER'
 SHARE_LOG = 'LOGS'
@@ -88,7 +92,6 @@ OPERATORS = {
 
 MOB3_IPS = ()
 MTS_IPS = ('46.133', '89.209', '31.144', '128.124', '178.133')
-# KS_IPS = ('46.211', '94.153.112')
 KS_IPS = ('46.211', '94.153', '5.248')
 LIFE_IPS = ('37.73', '46.96', '88.154', '88.155')
 

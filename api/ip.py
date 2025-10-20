@@ -1,4 +1,5 @@
 import os
+import time
 import platform
 import subprocess
 from datetime import datetime
@@ -13,7 +14,8 @@ from config.settings import (SHARE_USERNAME, SHARE_PASSWORD,
                              MOUNT_POINT_LOG, LOG_FOLDER,
                              MOUNT_POINT_REQUEST, REQUEST_FOLDER,
                              MOUNT_POINT_WARNING, WARNING_FOLDER,
-                             RESULT_LOCAL_FOLDER, USERNAME)
+                             RESULT_LOCAL_FOLDER, USERNAME,
+                             INTERVAL_REQUEST)
 
 
 def create_log_file():
@@ -194,6 +196,9 @@ def ips_handler(ip_list: List[IpDataRequest]):
                             else errors,
                         }
                         results.append(result)
+                        time.sleep(INTERVAL_REQUEST)
+                        print(f'!!! Fell asleep for {INTERVAL_REQUEST} seconds !!!')
+                        logging.info(f'!!! Fell asleep for {INTERVAL_REQUEST} seconds !!!')
                     print(f'Request are saved in: {request_file}')
                     logging.info(f'Request are saved in: {request_file}')
                 mount_network_folder(MOUNT_POINT_REQUEST, REQUEST_FOLDER)
